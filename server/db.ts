@@ -5,12 +5,21 @@ import bcrypt from 'bcryptjs';
 
 let dbInstance: DatabaseSync | null = null;
 
+function defaultDbPath(): string {
+  // Serverless instances can only write under /tmp. Seed data is recreated
+  // on a cold start so login and the demo catalog work without an external DB.
+  if (process.env.VERCEL) {
+    return '/tmp/meridian-sales-inventory.db';
+  }
+  return process.env.SQLITE_DB_PATH || path.resolve(process.cwd(), 'data', 'sales_inventory.db');
+}
+
 export function getDb(dbPath?: string): DatabaseSync {
   if (dbInstance && !dbPath) {
     return dbInstance;
   }
 
-  const targetPath = dbPath || process.env.SQLITE_DB_PATH || path.resolve(process.cwd(), 'data', 'sales_inventory.db');
+  const targetPath = dbPath || defaultDbPath();
   if (targetPath !== ':memory:') {
     const dir = path.dirname(targetPath);
     if (!fs.existsSync(dir)) {
@@ -19,7 +28,10 @@ export function getDb(dbPath?: string): DatabaseSync {
   }
 
   const db = new DatabaseSync(targetPath);
-  db.exec('PRAGMA journal_mode = WAL;');
+  // Vercel’s deployment filesystem is read-only. The database lives in /tmp,
+  // where WAL sidecar files are unreliable, so use a rollback journal there.
+  const writableTmp = targetPath.startsWith('/tmp') || Boolean(process.env.VERCEL);
+  db.exec(writableTmp ? 'PRAGMA journal_mode = DELETE;' : 'PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec('PRAGMA busy_timeout = 5000;');
 

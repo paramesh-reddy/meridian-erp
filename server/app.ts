@@ -128,7 +128,34 @@ export function createApiApp(
 ) {
   const app = express();
   app.use(cors());
-  app.use(express.json({ limit: '1mb' }));
+  // Vercel may parse the JSON body before Express runs. Parsing again would
+  // wipe it, so keep an already-parsed object and only read the stream otherwise.
+  app.use((req, res, next) => {
+    const existing = req.body as unknown;
+    if (Buffer.isBuffer(existing)) {
+      try {
+        req.body = existing.length ? JSON.parse(existing.toString('utf8')) : {};
+      } catch {
+        req.body = {};
+      }
+      next();
+      return;
+    }
+    if (typeof existing === 'string') {
+      try {
+        req.body = existing ? JSON.parse(existing) : {};
+      } catch {
+        req.body = {};
+      }
+      next();
+      return;
+    }
+    if (existing && typeof existing === 'object') {
+      next();
+      return;
+    }
+    express.json({ limit: '1mb' })(req, res, next);
+  });
 
   const v1 = express.Router();
   const authMiddleware = requireAuth(db);
