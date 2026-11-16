@@ -1,0 +1,1195 @@
+# MASTER DEVELOPMENT PROMPT
+## Project: Sales & Inventory Management System
+
+Act as a Senior Full Stack Software Architect and Engineer. Build a complete, professional, responsive, production-style Sales & Inventory Management System from scratch.
+
+The application must be fully functional, with a React.js frontend, FastAPI backend, Python business logic and MySQL database.
+
+Do not build just a UI prototype. Every important button, form, dashboard metric, API, database operation, authentication flow, approval workflow and email notification must work correctly.
+
+The project is an individual full-stack developer assessment. Prioritize clean architecture, maintainable code, strong business logic, security, database consistency and a polished user experience.
+
+---
+
+# 1. MANDATORY TECHNOLOGY STACK
+
+Use the following technologies.
+
+### Frontend
+- React.js
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router DOM
+- Axios
+- TanStack Query
+- React Hook Form
+- Zod validation
+- Recharts for dashboard charts
+- Lucide React icons
+
+### Backend
+- Python 3.11+
+- FastAPI
+- SQLAlchemy 2.x
+- Pydantic v2
+- Alembic for database migrations
+- JWT authentication
+- Passlib or pwdlib with Argon2/bcrypt password hashing
+- Python email integration
+
+### Database
+- MySQL 8+
+- SQLAlchemy ORM
+- Proper primary keys, foreign keys, indexes and constraints
+- Database transactions for critical business operations
+
+### Testing
+- Pytest
+- FastAPI TestClient
+- Pytest fixtures
+- Mock email service
+- Vitest
+- React Testing Library
+
+### Development tools
+- Git and GitHub
+- Postman or Swagger UI
+- Environment variables using .env
+- Docker Compose (recommended)
+
+Do not replace the required technologies with Firebase, Supabase, MongoDB, Node.js backend or another database.
+
+---
+
+# 2. APPLICATION OVERVIEW
+
+Develop a web-based Sales & Inventory Management System that allows businesses to manage:
+
+1. Products
+2. Customers
+3. Inventory and stock
+4. Sales orders
+5. Manager approval workflow
+6. Email notifications
+7. Sales and inventory dashboard
+8. User authentication and authorization
+
+The application must support multiple user roles with appropriate permissions.
+
+The application should look like a modern enterprise ERP/CRM dashboard.
+
+---
+
+# 3. USER ROLES AND PERMISSIONS
+
+Implement three roles.
+
+### Admin
+- Access the complete application.
+- Create, edit and delete products.
+- Manage customers.
+- Manage users and assign roles.
+- View all sales orders.
+- View inventory and inventory transactions.
+- Configure the order approval threshold.
+- View reports and dashboard analytics.
+- View approval history.
+
+### Sales Employee
+- Access their dashboard.
+- View products and available inventory.
+- Create sales orders.
+- Select customers.
+- Add multiple products to an order.
+- View their own orders.
+- Track order status.
+- View approval decisions.
+- Receive email notifications.
+- Cannot approve their own orders.
+
+### Manager
+- View manager dashboard.
+- View pending approval requests.
+- Review order details.
+- View customer and product information.
+- Approve sales orders.
+- Reject sales orders with a mandatory rejection reason.
+- View approval history.
+- Receive approval request emails.
+- View sales and inventory reports.
+
+Implement role-based authorization on both frontend and backend. Hiding frontend buttons alone is not sufficient.
+
+---
+
+# 4. AUTHENTICATION AND USER MANAGEMENT
+
+Build a secure authentication module.
+
+Features:
+- User login.
+- User logout.
+- User registration (admin-controlled or configurable).
+- Password hashing.
+- JWT access token.
+- Refresh token mechanism.
+- Protected routes.
+- Role-based access control.
+- Current user profile.
+- Change password.
+- Form validation.
+- Session expiration handling.
+
+Create default development accounts through database seeding:
+
+Admin:
+- admin@example.com
+
+Manager:
+- manager@example.com
+
+Sales Employee:
+- sales@example.com
+
+Use a documented development password for seeded accounts and force password changes in production.
+
+Never hardcode production passwords or secrets.
+
+---
+
+# 5. PRODUCT MANAGEMENT MODULE
+
+Create complete product CRUD functionality.
+
+Product fields:
+- Product ID
+- SKU
+- Product Name
+- Description
+- Category
+- Unit Price
+- Cost Price
+- Initial Stock
+- Minimum Stock Level
+- Status (Active/Inactive)
+- Created Date
+- Updated Date
+
+Features:
+- Add products.
+- Edit products.
+- Delete or deactivate products.
+- View product details.
+- Search by product name or SKU.
+- Filter by category and status.
+- Sort by price and stock.
+- Pagination.
+- Validate unique SKU.
+- Validate positive price and stock values.
+- Prevent deletion of products referenced by existing orders; allow deactivation instead.
+
+---
+
+# 6. CUSTOMER MANAGEMENT MODULE
+
+Implement customer CRUD.
+
+Customer fields:
+- Customer ID
+- Customer Name
+- Company Name
+- Email
+- Phone Number
+- Billing Address
+- Shipping Address
+- City
+- State
+- Postal Code
+- Created Date
+- Updated Date
+
+Features:
+- Add customer.
+- Edit customer.
+- View customer details.
+- Delete or deactivate customer.
+- Search by customer name.
+- Search by email or phone.
+- View customer order history.
+- Validate email and phone formats.
+- Prevent deletion when referenced by existing orders; support deactivation.
+
+---
+
+# 7. INVENTORY MANAGEMENT MODULE
+
+Implement proper inventory tracking.
+
+Inventory fields:
+- Inventory ID
+- Product ID
+- Quantity On Hand
+- Reserved Quantity
+- Available Quantity
+- Minimum Stock Level
+- Last Updated
+
+Formula:
+
+Available Quantity = Quantity On Hand - Reserved Quantity
+
+Features:
+- View all inventory.
+- Search products.
+- Filter low-stock products.
+- Track stock availability.
+- View stock movement history.
+- Record stock additions.
+- Record manual stock adjustments with reasons.
+- Display low-stock alerts.
+- Maintain inventory transaction history.
+
+Inventory transaction types:
+- STOCK_IN
+- STOCK_ADJUSTMENT
+- STOCK_RESERVED
+- STOCK_RELEASED
+- STOCK_DEDUCTED
+
+Every stock change must be recorded with:
+- Product ID
+- Transaction type
+- Quantity
+- Reference order ID (when applicable)
+- Previous quantity
+- New quantity
+- User who performed the action
+- Reason
+- Timestamp
+
+Never allow negative inventory.
+
+Use database locking or atomic updates to prevent concurrent orders from overselling stock.
+
+---
+
+# 8. SALES ORDER MANAGEMENT MODULE
+
+This is one of the most important modules.
+
+Allow sales employees to create sales orders.
+
+### Order creation form
+
+Fields:
+- Customer selection
+- Order date
+- Expected delivery date
+- Multiple products
+- Product quantity
+- Product unit price
+- Item subtotal
+- Discount (optional)
+- Tax (optional)
+- Grand total
+- Order notes
+
+Automatically calculate:
+
+Item Subtotal = Quantity × Unit Price
+
+Grand Total = Sum of item subtotals - Discount + Tax
+
+All financial calculations must happen on the backend. Never trust totals or prices supplied by the frontend.
+
+### Order validation
+
+Before creating an order:
+1. Verify the customer exists and is active.
+2. Verify all products exist and are active.
+3. Verify quantities are positive integers.
+4. Verify prices against current database product prices.
+5. Verify sufficient available stock.
+6. Validate discount and tax rules.
+7. Calculate the final total on the backend.
+8. Check the approval threshold.
+9. Validate all order items.
+10. Create the order using a database transaction.
+
+### Order statuses
+
+Implement the following statuses:
+
+- DRAFT
+- PENDING_APPROVAL
+- CONFIRMED
+- REJECTED
+- PROCESSING
+- COMPLETED
+- CANCELLED
+
+Ensure only valid status transitions are permitted.
+
+### Approval threshold
+
+Make the approval threshold configurable by the admin.
+
+Example:
+- Order total up to ₹50,000: Automatically confirmed.
+- Order total above ₹50,000: Requires manager approval.
+
+The ₹50,000 is a configurable example, not a hardcoded business rule.
+
+### Inventory reservation
+
+To prevent overselling:
+
+When an order is created:
+- Lock the relevant inventory records.
+- Validate available stock.
+- Reserve the required stock.
+- Create the order and order items.
+- If approval is required, set status to PENDING_APPROVAL.
+- If approval is not required, confirm the order and deduct stock.
+
+When a pending order is approved:
+- Deduct the reserved quantity from quantity on hand.
+- Release the reserved quantity.
+- Mark the order CONFIRMED.
+- Record the inventory transaction.
+
+When a pending order is rejected:
+- Release reserved stock.
+- Keep quantity on hand unchanged.
+- Mark the order REJECTED.
+- Record the rejection reason.
+
+When a confirmed order is cancelled:
+- Restore stock only if the order has not already been fulfilled.
+- Record the stock reversal.
+- Prevent duplicate restoration.
+
+All operations must be atomic and protected against duplicate requests.
+
+---
+
+# 9. MANAGER APPROVAL WORKFLOW
+
+Implement a complete approval system.
+
+### Step 1: Sales employee creates an order
+
+The backend validates the order and checks the approval threshold.
+
+### Step 2: Approval required
+
+If the order exceeds the configured threshold:
+- Create the sales order with PENDING_APPROVAL status.
+- Reserve the required inventory.
+- Create an approval record.
+- Send an email to the manager.
+
+### Step 3: Manager receives notification
+
+The manager receives an email containing:
+- Order number
+- Customer name
+- Order amount
+- Sales employee name
+- Order date
+- Link to the application approval page
+
+### Step 4: Manager reviews order
+
+Display:
+- Order details
+- Customer details
+- Product list
+- Quantities
+- Unit prices
+- Total amount
+- Stock information
+- Sales employee information
+
+### Step 5: Manager approves or rejects
+
+Approve:
+- Change approval status to APPROVED.
+- Change order status to CONFIRMED.
+- Deduct reserved stock.
+- Record approval timestamp.
+- Record manager ID.
+- Notify sales employee by email.
+
+Reject:
+- Require a rejection reason.
+- Change approval status to REJECTED.
+- Change order status to REJECTED.
+- Release reserved inventory.
+- Record manager ID and timestamp.
+- Notify sales employee by email.
+
+### Important business rules
+
+- Only managers and authorized admins can approve orders.
+- Sales employees cannot approve their own orders.
+- An order cannot be approved twice.
+- An order cannot be rejected after approval.
+- Rejected orders cannot be approved later.
+- Approval must happen within a database transaction.
+- Repeated API requests must not deduct stock multiple times.
+- Every decision must be stored in the approval history.
+
+---
+
+# 10. EMAIL NOTIFICATION INTEGRATION
+
+Implement actual email sending using SMTP.
+
+Use Gmail SMTP or another configurable SMTP provider.
+
+All email credentials must be stored in environment variables.
+
+Required email notifications:
+
+### Email 1: Manager approval request
+
+Trigger: Sales order requires manager approval.
+
+Include:
+- Order number
+- Customer
+- Employee
+- Total amount
+- Product summary
+- Approval link
+
+### Email 2: Order approved
+
+Trigger: Manager approves an order.
+
+Send to the sales employee.
+
+Include:
+- Order number
+- Approved status
+- Manager name
+- Approval date
+- Order amount
+
+### Email 3: Order rejected
+
+Trigger: Manager rejects an order.
+
+Send to the sales employee.
+
+Include:
+- Order number
+- Rejected status
+- Rejection reason
+- Manager name
+- Rejection date
+
+### Email architecture
+
+- Create a reusable EmailService.
+- Use HTML email templates.
+- Handle SMTP errors gracefully.
+- Log failed email attempts.
+- Do not expose SMTP credentials.
+- Do not roll back an approved order simply because email delivery failed.
+- Support retrying failed email notifications.
+- Use a mock email service in automated tests.
+
+---
+
+# 11. DASHBOARD AND ANALYTICS
+
+Build separate dashboard views based on user roles.
+
+### Admin dashboard
+
+Display KPI cards:
+- Total Revenue
+- Total Orders
+- Total Products
+- Total Customers
+- Pending Approvals
+- Low Stock Products
+
+Charts:
+- Monthly sales revenue.
+- Order status distribution.
+- Top-selling products.
+- Inventory distribution.
+
+Tables:
+- Recent orders.
+- Pending approvals.
+- Low-stock products.
+
+### Sales Employee dashboard
+
+Display:
+- My Total Orders
+- My Confirmed Orders
+- My Pending Approvals
+- My Rejected Orders
+- My Sales Value
+
+Display recent orders and their statuses.
+
+### Manager dashboard
+
+Display:
+- Pending Approval Requests
+- Approved Orders
+- Rejected Orders
+- Total Orders Awaiting Review
+
+Include:
+- Pending approval table.
+- Recent approval history.
+- Order amount summary.
+- Quick approve/reject actions.
+
+All dashboard values must come from real backend APIs and database queries.
+
+Do not use hardcoded chart values.
+
+---
+
+# 12. FRONTEND UI/UX REQUIREMENTS
+
+Create a modern enterprise-grade dashboard.
+
+### Design direction
+
+Use a clean, professional ERP interface.
+
+Visual style:
+- Modern SaaS dashboard.
+- White/light background.
+- Dark navy sidebar.
+- Professional blue primary color.
+- Subtle shadows.
+- Rounded cards.
+- Clean typography.
+- Consistent spacing.
+- Responsive layout.
+- Professional tables and charts.
+
+### Application layout
+
+Sidebar navigation:
+- Dashboard
+- Products
+- Customers
+- Inventory
+- Sales Orders
+- Approvals (manager/admin)
+- Reports
+- User Management (admin)
+- Settings
+- Logout
+
+Top navigation:
+- Search
+- Notifications
+- Current user profile
+- Role indicator
+- Date display
+
+### Required pages
+
+1. Login page
+2. Dashboard page
+3. Product listing page
+4. Add product page
+5. Edit product page
+6. Customer listing page
+7. Add customer page
+8. Edit customer page
+9. Inventory listing page
+10. Inventory adjustment page
+11. Sales order listing page
+12. Create sales order page
+13. Sales order details page
+14. Manager approval listing page
+15. Approval details page
+16. Reports page
+17. User management page
+18. Settings page
+19. User profile page
+
+### UI functionality
+
+Implement:
+- Search.
+- Filtering.
+- Pagination.
+- Sorting.
+- Loading indicators.
+- Empty states.
+- Error messages.
+- Success notifications.
+- Confirmation dialogs.
+- Form validation.
+- Responsive tables.
+- Modal dialogs.
+- Status badges.
+- Mobile-friendly sidebar.
+
+All forms must have proper client-side and server-side validation.
+
+Do not use fake buttons, static forms or placeholder data for completed features.
+
+---
+
+# 13. BACKEND API ARCHITECTURE
+
+Use RESTful APIs with versioning:
+
+/api/v1/
+
+Create the following API groups.
+
+### Authentication
+
+POST /api/v1/auth/login
+
+POST /api/v1/auth/refresh
+
+POST /api/v1/auth/logout
+
+GET /api/v1/auth/me
+
+POST /api/v1/auth/change-password
+
+### Users
+
+GET /api/v1/users
+
+POST /api/v1/users
+
+GET /api/v1/users/{id}
+
+PUT /api/v1/users/{id}
+
+DELETE /api/v1/users/{id}
+
+### Products
+
+GET /api/v1/products
+
+POST /api/v1/products
+
+GET /api/v1/products/{id}
+
+PUT /api/v1/products/{id}
+
+DELETE /api/v1/products/{id}
+
+### Customers
+
+GET /api/v1/customers
+
+POST /api/v1/customers
+
+GET /api/v1/customers/{id}
+
+PUT /api/v1/customers/{id}
+
+DELETE /api/v1/customers/{id}
+
+### Inventory
+
+GET /api/v1/inventory
+
+GET /api/v1/inventory/{product_id}
+
+POST /api/v1/inventory/adjustments
+
+GET /api/v1/inventory/transactions
+
+GET /api/v1/inventory/low-stock
+
+### Sales Orders
+
+GET /api/v1/orders
+
+POST /api/v1/orders
+
+GET /api/v1/orders/{id}
+
+PUT /api/v1/orders/{id}
+
+POST /api/v1/orders/{id}/cancel
+
+GET /api/v1/orders/{id}/items
+
+### Approvals
+
+GET /api/v1/approvals/pending
+
+GET /api/v1/approvals/history
+
+GET /api/v1/approvals/{id}
+
+POST /api/v1/approvals/{id}/approve
+
+POST /api/v1/approvals/{id}/reject
+
+### Dashboard
+
+GET /api/v1/dashboard/admin
+
+GET /api/v1/dashboard/sales
+
+GET /api/v1/dashboard/manager
+
+### Settings
+
+GET /api/v1/settings
+
+PUT /api/v1/settings/approval-threshold
+
+Use appropriate HTTP status codes, response schemas, validation and authorization.
+
+Implement:
+- Consistent JSON responses.
+- Standard error handling.
+- Pagination metadata.
+- Filtering and sorting.
+- API documentation using Swagger/OpenAPI.
+- Dependency injection.
+- Proper logging.
+
+---
+
+# 14. DATABASE DESIGN
+
+Use MySQL with SQLAlchemy ORM.
+
+Create these tables:
+
+1. users
+2. roles (or an enum-based role model)
+3. products
+4. customers
+5. inventory
+6. sales_orders
+7. order_items
+8. approvals
+9. inventory_transactions
+10. system_settings
+11. email_logs
+12. refresh_tokens
+
+### Important relationships
+
+- One customer can have many sales orders.
+- One user can create many sales orders.
+- One sales order can contain many order items.
+- One product can appear in many order items.
+- One product has one inventory record.
+- One sales order can have an approval record.
+- One manager can review many approvals.
+- One product can have many inventory transactions.
+
+Use:
+- UUID or integer primary keys.
+- Foreign keys.
+- Unique constraints.
+- Appropriate indexes.
+- Decimal types for money.
+- UTC timestamps.
+- Created_at and updated_at fields.
+- Appropriate cascade and deletion behavior.
+
+Create Alembic migrations.
+
+Provide an ER diagram in the README.
+
+---
+
+# 15. PROJECT FOLDER STRUCTURE
+
+Use a clean separation of frontend and backend.
+
+sales-inventory-management/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   │   ├── auth/
+│   │   │   ├── dashboard/
+│   │   │   ├── products/
+│   │   │   ├── customers/
+│   │   │   ├── inventory/
+│   │   │   ├── orders/
+│   │   │   ├── approvals/
+│   │   │   ├── reports/
+│   │   │   └── settings/
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── schemas/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   └── App.tsx
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── v1/
+│   │   ├── core/
+│   │   ├── db/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── utils/
+│   │   ├── templates/
+│   │   └── main.py
+│   ├── alembic/
+│   ├── tests/
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── docker-compose.yml
+├── README.md
+└── .gitignore
+
+Follow this structure or an equally clean architecture.
+
+---
+
+# 16. SECURITY REQUIREMENTS
+
+Implement the following:
+
+- Secure password hashing.
+- JWT authentication.
+- Refresh token handling.
+- Role-based access control.
+- Input validation.
+- SQL injection prevention through ORM.
+- CORS configuration.
+- Environment-based secrets.
+- Protection against unauthorized access.
+- Password and token security.
+- Rate limiting for sensitive authentication endpoints.
+- Proper error responses without exposing internal stack traces.
+- No secrets committed to GitHub.
+
+Never trust client-supplied order totals, user roles, stock quantities or approval decisions.
+
+---
+
+# 17. TRANSACTION MANAGEMENT AND BUSINESS LOGIC
+
+This is a critical evaluation area.
+
+Use SQLAlchemy transactions for:
+
+1. Creating an order and reserving stock.
+2. Confirming an order and deducting inventory.
+3. Rejecting an order and releasing reserved stock.
+4. Cancelling an eligible order and restoring stock.
+5. Recording inventory transactions.
+6. Recording approval decisions.
+
+Ensure all related database operations succeed or fail together.
+
+Use appropriate row locking, such as SELECT FOR UPDATE, where supported by MySQL InnoDB.
+
+Prevent:
+- Duplicate stock deduction.
+- Negative inventory.
+- Concurrent overselling.
+- Duplicate approval decisions.
+- Unauthorized approval.
+- Invalid status transitions.
+- Incorrect order totals.
+
+Test these cases explicitly.
+
+---
+
+# 18. AUTOMATED TESTING
+
+Write at least 20 meaningful automated tests.
+
+### Authentication tests
+1. Successful login.
+2. Invalid password.
+3. Unauthorized API access.
+4. Role-based authorization.
+
+### Product tests
+5. Create product.
+6. Update product.
+7. Duplicate SKU validation.
+
+### Customer tests
+8. Create customer.
+9. Invalid customer email.
+
+### Inventory tests
+10. View inventory.
+11. Reject stock adjustment that creates negative stock.
+12. Verify inventory transaction history.
+
+### Sales order tests
+13. Create valid sales order.
+14. Reject order with insufficient stock.
+15. Calculate order total correctly.
+16. Automatically confirm order below approval threshold.
+17. Send order to pending approval above threshold.
+
+### Approval tests
+18. Manager approves order and inventory is deducted.
+19. Manager rejects order and reserved stock is released.
+20. Sales employee cannot approve an order.
+21. Duplicate approval is prevented.
+22. Rejection requires a reason.
+
+### Email and transaction tests
+23. Manager email is triggered for approval requests.
+24. User notification is triggered after approval/rejection.
+25. Failed transaction does not partially update inventory or order status.
+
+Use a separate test database or isolated test fixtures.
+
+Mock SMTP. Do not send real emails during automated testing.
+
+---
+
+# 19. ERROR HANDLING
+
+Implement meaningful error responses.
+
+Examples:
+
+- 400: Invalid request.
+- 401: Unauthorized.
+- 403: Forbidden.
+- 404: Resource not found.
+- 409: Conflict or insufficient stock.
+- 422: Validation error.
+- 500: Internal server error.
+
+Show user-friendly frontend error messages.
+
+Log detailed errors on the backend without exposing sensitive information to the frontend.
+
+---
+
+# 20. ENVIRONMENT CONFIGURATION
+
+Create backend .env.example:
+
+DATABASE_URL=mysql+pymysql://root:password@localhost:3306/sales_inventory
+
+SECRET_KEY=replace_with_secure_random_secret
+
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+SMTP_HOST=smtp.gmail.com
+
+SMTP_PORT=587
+
+SMTP_USER=your_email@example.com
+
+SMTP_PASSWORD=your_app_password
+
+MANAGER_EMAIL=manager@example.com
+
+FRONTEND_URL=http://localhost:5173
+
+Create frontend .env.example:
+
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+
+Do not commit real .env files.
+
+---
+
+# 21. README DOCUMENTATION
+
+Create a complete professional README.md.
+
+Include:
+
+1. Project title.
+2. Project overview.
+3. Main features.
+4. Technology stack.
+5. Architecture diagram.
+6. Database ER diagram.
+7. Folder structure.
+8. User roles and permissions.
+9. Approval workflow.
+10. API endpoint documentation.
+11. Database setup.
+12. Environment configuration.
+13. Backend installation.
+14. Frontend installation.
+15. How to run migrations.
+16. How to seed development data.
+17. How to run tests.
+18. Demo login credentials for development.
+19. Screenshots.
+20. Known limitations and future enhancements.
+
+A new developer should be able to clone the repository and run the application by following the README on a clean machine.
+
+---
+
+# 22. DEVELOPMENT EXECUTION PLAN
+
+Build the project in the following phases.
+
+### Phase 1: Project initialization
+- Set up frontend and backend.
+- Configure MySQL.
+- Configure SQLAlchemy.
+- Set up Alembic.
+- Create initial database schema.
+- Configure environment variables.
+
+### Phase 2: Authentication
+- Implement login.
+- Implement JWT.
+- Implement role-based authorization.
+- Create protected frontend routes.
+
+### Phase 3: Core CRUD
+- Product management.
+- Customer management.
+- User management.
+- Inventory management.
+
+### Phase 4: Sales order management
+- Create sales order UI.
+- Implement backend validation.
+- Calculate totals.
+- Validate stock.
+- Implement inventory reservation.
+- Create order history.
+
+### Phase 5: Approval workflow
+- Approval threshold settings.
+- Manager pending approval screen.
+- Approve/reject APIs.
+- Inventory deduction.
+- Stock release.
+- Approval history.
+
+### Phase 6: Email integration
+- Configure SMTP.
+- Create HTML email templates.
+- Manager approval notification.
+- Employee approval notification.
+- Employee rejection notification.
+- Email error handling.
+
+### Phase 7: Dashboard and analytics
+- Admin dashboard.
+- Sales dashboard.
+- Manager dashboard.
+- Charts and KPIs.
+- Recent activity.
+
+### Phase 8: Testing and quality
+- Write 20+ automated tests.
+- Fix frontend and backend errors.
+- Test role permissions.
+- Test inventory concurrency.
+- Test transaction rollback.
+- Test email integration.
+
+### Phase 9: Finalization
+- Improve responsive UI.
+- Add README documentation.
+- Create database migrations.
+- Add seed data.
+- Configure deployment.
+- Verify the complete application.
+- Prepare a five-minute demo recording.
+
+---
+
+# 23. ACCEPTANCE CRITERIA
+
+The project is considered complete only when all the following work:
+
+1. Users can log in with their assigned roles.
+2. Admin can manage products and customers.
+3. Sales employees can create sales orders.
+4. Backend validates stock and order details.
+5. Orders below the threshold can be confirmed automatically.
+6. Orders above the threshold require manager approval.
+7. Manager receives an actual email notification.
+8. Manager can approve or reject orders.
+9. Sales employee receives an email with the decision.
+10. Approval deducts reserved inventory correctly.
+11. Rejection releases reserved inventory.
+12. Inventory cannot become negative.
+13. Dashboard displays actual database information.
+14. Role permissions work correctly.
+15. All critical operations use database transactions.
+16. Automated tests pass.
+17. The application runs using documented setup instructions.
+18. There are no non-functional buttons or fake business operations.
+
+---
+
+# 24. FINAL DEVELOPMENT INSTRUCTIONS
+
+Follow these instructions throughout implementation:
+
+- First inspect the development environment and existing files.
+- If the repository already contains code, inspect it before changing anything.
+- Build a working baseline before adding optional enhancements.
+- Do not generate the entire application as one unstructured code file.
+- Implement each module with clean separation of responsibilities.
+- Use reusable React components.
+- Use reusable backend services and repository patterns.
+- Use Pydantic request and response schemas.
+- Use database migrations rather than manually modifying production tables.
+- Use proper TypeScript types.
+- Avoid duplicated business logic.
+- Do not hardcode dashboard statistics.
+- Do not use mock API responses in the final application.
+- Do not leave TODO comments for mandatory features.
+- Do not claim that a feature is complete unless it has been implemented and tested.
+- Run the frontend and backend after each major phase.
+- Fix errors before moving to the next phase.
+- Verify API integration between React and FastAPI.
+- Verify database persistence.
+- Verify the complete order approval lifecycle.
+- Keep the code readable and suitable for a technical interview discussion.
+
+At the end, provide:
+1. Complete source code.
+2. Working frontend and backend.
+3. MySQL database schema and migrations.
+4. Seeded development accounts.
+5. API documentation.
+6. Automated test suite and test results.
+7. README.md.
+8. .env.example files.
+9. Docker configuration if implemented.
+10. A final implementation summary listing completed features and any known limitations.
+
+Start by creating the project architecture and database schema, then implement the application phase by phase. Do not stop after generating a plan or mockup. Build the actual working application.
