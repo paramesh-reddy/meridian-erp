@@ -12,6 +12,7 @@ from app.models.user import User, UserRole
 
 
 def seed_initial_data(db: Session) -> None:
+    """Insert the demo catalog once. Restarting the API never duplicates rows."""
     if db.scalar(select(User.id).limit(1)):
         return
 

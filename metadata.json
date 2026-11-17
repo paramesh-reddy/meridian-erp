@@ -1,6 +1,0 @@
-{
-  "name": "Meridian ERP — Sales & Inventory Management System",
-  "description": "Enterprise Sales & Inventory Management System with multi-role RBAC, atomic inventory reservation, configurable manager approval workflows, SMTP email notifications, and real-time analytics.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

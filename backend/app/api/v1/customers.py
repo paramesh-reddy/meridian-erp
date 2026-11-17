@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.v1.deps import get_current_user, require_roles
 from app.db.session import get_db
@@ -62,9 +62,37 @@ def get_customer(customer_id: int, _: User = Depends(get_current_user), db: Sess
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     orders = db.execute(
-        select(SalesOrder).where(SalesOrder.customer_id == customer_id).order_by(SalesOrder.created_at.desc())
+        select(SalesOrder)
+        .options(joinedload(SalesOrder.creator))
+        .where(SalesOrder.customer_id == customer_id)
+        .order_by(SalesOrder.created_at.desc())
     ).scalars().all()
-    return {"customer": customer, "orders": orders}
+    return {
+        "id": customer.id,
+        "name": customer.name,
+        "company_name": customer.company_name,
+        "email": customer.email,
+        "phone": customer.phone,
+        "billing_address": customer.billing_address,
+        "shipping_address": customer.shipping_address,
+        "city": customer.city,
+        "state": customer.state,
+        "postal_code": customer.postal_code,
+        "is_active": customer.is_active,
+        "created_at": customer.created_at,
+        "updated_at": customer.updated_at,
+        "orders": [
+            {
+                "id": order.id,
+                "order_number": order.order_number,
+                "order_date": order.order_date.isoformat() if order.order_date else None,
+                "grand_total": float(order.grand_total or 0),
+                "status": order.status.value,
+                "sales_rep": order.creator.full_name if order.creator else "",
+            }
+            for order in orders
+        ],
+    }
 
 
 @router.put("/{customer_id}")
